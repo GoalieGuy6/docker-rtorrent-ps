@@ -1,7 +1,7 @@
 #!/usr/bin/with-contenv bash
 
-	screen -D -m -S \
-	rtorrent s6-setuidgid abc /usr/bin/rtorrent \
+	screen -T xterm-256color -D -m -S rtorrent \
+	s6-setuidgid abc rtorrent \
 	-n -o import=/config/rtorrent/rtorrent.rc
 
 until [ -e "/config/rtorrent/rtorrent_sess/rtorrent.lock" ];
