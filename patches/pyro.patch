@@ -1,0 +1,51 @@
+diff --git a/src/pyrocore/scripts/lstor.py b/src/pyrocore/scripts/lstor.py
+index 87b68cf..b5dd413 100644
+--- a/src/pyrocore/scripts/lstor.py
++++ b/src/pyrocore/scripts/lstor.py
+@@ -21,6 +21,7 @@ from __future__ import with_statement
+ 
+ import pprint
+ import hashlib
++import json
+ 
+ from pyrobase import bencode
+ from pyrocore.scripts.base import ScriptBase
+@@ -88,8 +89,9 @@ class MetafileLister(ScriptBase):
+                             len(data["info"]["pieces"]) / len(hashlib.sha1().digest()) # bogus pylint: disable=E1101
+                         )
+ 
+-                    pprinter = (pprint.PrettyPrinter if self.options.reveal else metafile.MaskingPrettyPrinter)()
+-                    listing = pprinter.pformat(data)
++                    # pprinter = (pprint.PrettyPrinter if self.options.reveal else metafile.MaskingPrettyPrinter)()
++                    # listing = pprinter.pformat(data)
++                    listing = json.dumps(data, sort_keys=True, indent=4, ensure_ascii=False)
+                 elif self.options.output:
+                     def splitter(fields):
+                         "Yield single names for a list of comma-separated strings."
+diff --git a/src/pyrocore/util/metafile.py b/src/pyrocore/util/metafile.py
+index 8d3d8d1..d1ec057 100644
+--- a/src/pyrocore/util/metafile.py
++++ b/src/pyrocore/util/metafile.py
+@@ -243,7 +243,8 @@ def sanitize(meta, diagnostics=False):
+             # Broken beyond anything reasonable
+             bad_encodings.add('UNKNOWN/EXOTIC')
+             bad_fields.add(field)
+-            return str(text, 'utf-8', 'replace').replace('\ufffd', '_').encode("utf-8")
++            # return str(text, 'utf-8', 'replace').replace('\ufffd', '_').encode("utf-8")
++            return text.decode('utf-8', 'replace').replace('\ufffd', '_').encode("utf-8")
+ 
+     # Go through all string fields and check them
+     for field in ("comment", "created by"):
+diff --git a/update-to-head.sh b/update-to-head.sh
+index 0500e35..147790f 100755
+--- a/update-to-head.sh
++++ b/update-to-head.sh
+@@ -85,7 +85,7 @@ if test -d ${BIN_DIR:-$HOME/bin}; then
+         fi
+     done
+ fi
+-
++exit 0
+ # Make sure people update their main config
+ rm -f "$PROJECT_ROOT/src/pyrocore/data/config"/rtorrent-0.8.?.rc 2>/dev/null || :
+ rm -f "$HOME/.pyroscope"/rtorrent-0.8.?.rc.default 2>/dev/null || :

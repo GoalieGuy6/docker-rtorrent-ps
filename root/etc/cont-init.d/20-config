@@ -2,27 +2,32 @@
 
 # make folders
 mkdir -p \
-	/config{/log/rtorrent,/rtorrent/rtorrent_sess} \
-	/downloads{/completed,/incoming,/watched}
-
+	/config{/log/rtorrent,/rtorrent/session,/rtorrent/pyroscope/rtorrent.d} \
+	/downloads \
+	/watch
 
 # copy config
-PREV_DIR=$(pwd)
-
 [[ ! -e /config/rtorrent/rtorrent.rc ]] && \
 	cp /defaults/rtorrent.rc /config/rtorrent/rtorrent.rc
 
+cd /defaults/pyroscope
+shopt -s globstar nullglob
+for i in **
+do
+	[[ ! -e "/config/rtorrent/pyroscope/${i}" ]] && cp "${i}" "/config/rtorrent/pyroscope/${i}"
+done
+
 # delete lock file if exists
-[[ -e /config/rtorrent/rtorrent_sess/rtorrent.lock ]] && \
-	rm /config/rtorrent/rtorrent_sess/rtorrent.lock
+[[ -e /config/rtorrent/session/rtorrent.lock ]] && \
+	rm /config/rtorrent/session/rtorrent.lock
 
 # permissions
 chown abc:abc \
-	/downloads \
-	/downloads{/completed,/incoming,/watched}
+	/run
 
 chown -R abc:abc \
 	/config \
-	/run
+	/downloads \
+	/watch
 
 chmod 644 /etc/logrotate.d/*

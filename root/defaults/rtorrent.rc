@@ -1,26 +1,60 @@
-execute.nothrow = rm,/run/.rtorrent.sock
-network.scgi.open_local = /run/.rtorrent.sock
-schedule = socket_chmod,0,0,"execute=chmod,0660,/run/.rtorrent.sock"
-schedule = socket_chgrp,0,0,"execute=chgrp,abc,/run/.rtorrent.sock"
-log.open_file = "rtorrent", /config/log/rtorrent/rtorrent.log
-log.add_output = "info", "rtorrent"
+method.insert = cfg.config_dir,   private|const|string, (cat,"/config/rtorrent/")
+method.insert = cfg.log_dir,      private|const|string, (cat,"/config/log/rtorrent/")
+
+method.insert = cfg.download_dir, private|const|string, (cat,"/downloads/")
+method.insert = cfg.watch_dir,    private|const|string, (cat,"/watch/")
+
+session = (cat,(cfg.config_dir),"session")
+directory = (cat,(cfg.download_dir))
+
+schedule2 = watch_directory,1,10,((load.start,(cat,(cfg.watch_dir),"*.torrent")))
+
+# Global upload/download rates, 0 for unlimited
+upload_rate = 0
+download_rate = 0
+
+# Maximum number of global simultaneous upload/download slots
+max_uploads_global = 1000
+max_downloads_global = 1000
+
+# Maximum number of upload/download slots per torrent
+max_uploads = 100
+max_downloads = 100
+
+# Maximum and minimum number of peers to search for
 min_peers = 40
-max_peers = 1200
-max_uploads = 15
-download_rate = 10000
-upload_rate = 5000
-# schedule = watch_directory_1,5,5,"load.start=/downloads/watched/*.torrent"
-directory = /downloads/incoming
-session = /config/rtorrent/rtorrent_sess
-schedule = low_diskspace,5,60,close_low_diskspace=100M
-# ip = 178.32.28.51
-bind = 0.0.0.0
+max_peers = 500
+
 port_range = 51413-51413
-check_hash = yes
-encryption = allow_incoming,try_outgoing,enable_retry
-dht = auto
-dht_port = 6881
-# network.http.ssl_verify_peer.set=0
-# scgi_port = 0.0.0.0:5000
+
+# BitTorrent settings
+dht = disable
+peer_exchange = no
+use_udp_trackers = yes
+
+encryption = allow_incoming,try_outgoing,enable_retry,prefer_plaintext
+
+network.max_open_files.set = 4096
+network.max_open_sockets.set = 2048
+network.http.max_open.set = 512
+network.send_buffer.size.set = 16M
+network.receive_buffer.size.set = 16M
+
+pieces.hash.on_completion.set = no
+pieces.preload.type.set = 1
+pieces.preload.min_size.set = 262144
+pieces.preload.min_rate.set = 5120
+pieces.memory.max.set = 4000M
+
+execute.nothrow = rm,/run/rtorrent.sock
+network.scgi.open_local = /run/rtorrent.sock
+schedule2 = socket_chmod,0,0,"execute=chmod,0660,/run/rtorrent.sock"
+schedule2 = socket_chgrp,0,0,"execute=chgrp,abc,/run/rtorrent.sock"
+
+log.open_file = "rtorrent", (cat,(cfg.log_dir),"rtorrent.log")
+log.add_output = "info", "rtorrent"
+
 encoding_list = UTF-8
-# system.umask.set = 022
+
+method.insert = pyro.extended, value|const, 1
+import = /config/rtorrent/pyroscope/rtorrent-pyro.rc
